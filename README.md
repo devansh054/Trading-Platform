@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Mini Equities Trading Platform with IOI Support
 
 A comprehensive trading platform built with Java 17, Spring Boot, PostgreSQL, and Apache Kafka, featuring real-time order matching, risk management, and Indications of Interest (IOI) processing.
@@ -268,3 +269,7 @@ For support and questions, please open an issue in the repository or contact the
 - [ ] Kubernetes deployment
 - [ ] Monitoring and alerting
 - [ ] Backtesting framework
+=======
+# Trading-Platform
+A modern full-stack trading platform with real-time market data, portfolio management, and advanced trading features. Built with React/Next.js frontend and Spring Boot backend.
+>>>>>>> origin/main
