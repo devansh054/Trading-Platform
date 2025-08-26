@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: test-trading-platform-group
+      auto-offset-reset: earliest
+
+trading:
+  matching-engine:
+    thread-pool-size: 2
+    order-timeout-seconds: 10
+  
+  risk-management:
+    max-position-size: 1000
+    max-order-value: 100000
+    restricted-symbols:
+      - "TEST_RESTRICTED"
+  
+  order-book:
+    max-price-levels: 50
+    tick-size: 0.01
+
+logging:
+  level:
+    com.trading: DEBUG
+    org.springframework.kafka: DEBUG

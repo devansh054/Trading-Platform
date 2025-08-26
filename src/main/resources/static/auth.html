@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Platform - Authentication</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 2rem 0;
+        }
+
+        .auth-container {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 24px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: visible;
+            margin: 1rem;
+            flex-shrink: 0;
+        }
+
+        .auth-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .auth-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .auth-logo i {
+            font-size: 2rem;
+            color: white;
+        }
+
+        .auth-title {
+            color: #f8fafc;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-subtitle {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 2rem;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tab.active {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            color: #e2e8f0;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            color: #f8fafc;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .form-input::placeholder {
+            color: #64748b;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .input-group .form-input {
+            padding-left: 3rem;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #3b82f6;
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .auth-button:active {
+            transform: translateY(0);
+        }
+
+        .auth-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .forgot-password {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .forgot-password a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password a:hover {
+            color: #60a5fa;
+        }
+
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(29, 78, 216, 0.1));
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            width: 100px;
+            height: 100px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 80px;
+            height: 80px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                margin: 1rem;
+                padding: 2rem;
+            }
+            
+            .auth-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h1 class="auth-title">Trading Platform</h1>
+            <p class="auth-subtitle">Professional Equities Trading Dashboard</p>
+        </div>
+
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="switchTab('signin')">Sign In</button>
+            <button class="auth-tab" onclick="switchTab('signup')">Sign Up</button>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <!-- Sign In Form -->
+        <form class="auth-form active" id="signinForm">
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <div class="input-group">
+                    <i class="input-icon fas fa-user"></i>
+                    <input type="text" class="form-input" id="signinUsername" placeholder="Enter your username" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="input-group">
+                    <i class="input-icon fas fa-lock"></i>
+                    <input type="password" class="form-input" id="signinPassword" placeholder="Enter your password" required>
+                    <i class="password-toggle fas fa-eye" onclick="togglePassword('signinPassword', this)"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="auth-button" id="signinButton">
+                <div class="loading-spinner" id="signinSpinner"></div>
+                <span id="signinButtonText">Sign In to Dashboard</span>
+            </button>
+
+            <div class="forgot-password">
+                <a href="#" onclick="showForgotPassword()">Forgot your password?</a>
+            </div>
+        </form>
+
+        <!-- Sign Up Form -->
+        <form class="auth-form" id="signupForm">
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <div class="input-group">
+                    <i class="input-icon fas fa-user"></i>
+                    <input type="text" class="form-input" id="signupUsername" placeholder="Choose a unique username" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <div class="input-group">
+                    <i class="input-icon fas fa-id-card"></i>
+                    <input type="text" class="form-input" id="signupFullName" placeholder="Enter your full name" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <div class="input-group">
+                    <i class="input-icon fas fa-envelope"></i>
+                    <input type="email" class="form-input" id="signupEmail" placeholder="Enter your email address" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="input-group">
+                    <i class="input-icon fas fa-lock"></i>
+                    <input type="password" class="form-input" id="signupPassword" placeholder="Create a strong password" required>
+                    <i class="password-toggle fas fa-eye" onclick="togglePassword('signupPassword', this)"></i>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Confirm Password</label>
+                <div class="input-group">
+                    <i class="input-icon fas fa-lock"></i>
+                    <input type="password" class="form-input" id="confirmPassword" placeholder="Confirm your password" required>
+                    <i class="password-toggle fas fa-eye" onclick="togglePassword('confirmPassword', this)"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="auth-button" id="signupButton">
+                <div class="loading-spinner" id="signupSpinner"></div>
+                <span id="signupButtonText">Create Trading Account</span>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+            
+            // Update forms
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            document.getElementById(tab + 'Form').classList.add('active');
+            
+            // Clear messages
+            clearMessages();
+        }
+
+        // Password visibility toggle
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Message handling
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function clearMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // Loading state management
+        function setLoading(formType, loading) {
+            const button = document.getElementById(formType + 'Button');
+            const spinner = document.getElementById(formType + 'Spinner');
+            const buttonText = document.getElementById(formType + 'ButtonText');
+            
+            if (loading) {
+                button.disabled = true;
+                spinner.style.display = 'inline-block';
+                buttonText.textContent = formType === 'signin' ? 'Signing In...' : 'Creating Account...';
+            } else {
+                button.disabled = false;
+                spinner.style.display = 'none';
+                buttonText.textContent = formType === 'signin' ? 'Sign In to Dashboard' : 'Create Trading Account';
+            }
+        }
+
+        // API calls
+        async function apiCall(endpoint, method, data) {
+            try {
+                const response = await fetch(`http://localhost:8080/api/auth/${endpoint}`, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: data ? JSON.stringify(data) : undefined
+                });
+
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.message || 'Request failed');
+                }
+                
+                return result;
+            } catch (error) {
+                throw new Error(error.message || 'Network error occurred');
+            }
+        }
+
+        // Sign In Form Handler
+        document.getElementById('signinForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearMessages();
+            
+            const username = document.getElementById('signinUsername').value.trim();
+            const password = document.getElementById('signinPassword').value;
+            
+            if (!username || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            setLoading('signin', true);
+            
+            try {
+                const result = await apiCall('signin', 'POST', { username, password });
+                
+                showSuccess('Sign in successful! Redirecting to dashboard...');
+                
+                // Store user session
+                localStorage.setItem('tradingUser', JSON.stringify(result.user));
+                localStorage.setItem('tradingToken', result.token);
+                
+                // Redirect to dashboard after short delay
+                setTimeout(() => {
+                    window.location.href = '/trading-dashboard.html';
+                }, 1500);
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                setLoading('signin', false);
+            }
+        });
+
+        // Sign Up Form Handler
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearMessages();
+            
+            const username = document.getElementById('signupUsername').value.trim();
+            const fullName = document.getElementById('signupFullName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validation
+            if (!username || !fullName || !email || !password || !confirmPassword) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            if (username.length < 3) {
+                showError('Username must be at least 3 characters long');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters long');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+            
+            setLoading('signup', true);
+            
+            try {
+                const result = await apiCall('signup', 'POST', {
+                    username,
+                    fullName,
+                    email,
+                    password
+                });
+                
+                showSuccess('Account created successfully! You can now sign in.');
+                
+                // Switch to sign in tab after short delay
+                setTimeout(() => {
+                    switchTab('signin');
+                    document.getElementById('signinUsername').value = username;
+                }, 2000);
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                setLoading('signup', false);
+            }
+        });
+
+        // Forgot password handler
+        function showForgotPassword() {
+            showError('Password reset functionality will be available soon. Please contact support.');
+        }
+
+        // Check if user is already logged in - commented out for testing
+        // window.addEventListener('load', () => {
+        //     const user = localStorage.getItem('tradingUser');
+        //     const token = localStorage.getItem('tradingToken');
+        //     
+        //     if (user && token) {
+        //         // User is already logged in, redirect to dashboard
+        //         window.location.href = '/trading-dashboard.html';
+        //     }
+        // });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Equities Trading Platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Immediate authentication check - runs before page loads
+        (function() {
+            const token = localStorage.getItem('authToken') || localStorage.getItem('tradingToken');
+            const user = localStorage.getItem('currentUser') || localStorage.getItem('tradingUser');
+            
+            console.log('Immediate auth check - Token:', token ? 'exists' : 'missing');
+            console.log('Immediate auth check - User:', user ? 'exists' : 'missing');
+            
+            if (!token || !user) {
+                console.log('No authentication found, redirecting immediately...');
+                window.location.href = '/auth.html';
+                return;
+            }
+            console.log('Authentication found, allowing page to load');
+        })();
+    </script>
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-color: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--secondary-color), #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .user-info {
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 8px 16px;
+            background: var(--dark-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .header .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .nav-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
+            padding: 12px 24px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-item:hover {
+            background: var(--secondary-color);
+            color: var(--text-primary);
+            border-color: var(--secondary-color);
+        }
+
+        .nav-item.active {
+            background: var(--primary-color);
+            color: var(--text-primary);
+            border-color: var(--primary-color);
+        }
+
+        .section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            border-color: var(--secondary-color);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #28a745;
+            transform: translateY(-2px);
+        }
+
+        .result {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            border-left: 4px solid;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .result.success {
+            background: rgba(40, 167, 69, 0.1);
+            border-left-color: #28a745;
+            color: #155724;
+        }
+
+        .result.error {
+            background: rgba(220, 53, 69, 0.1);
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+
+        .result h4 {
+            margin: 0 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+        }
+
+        .result .data-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .result .data-rows > div {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result .data-rows > div:last-child {
+            border-bottom: none;
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            display: block !important;
+            position: relative;
+            animation: slideIn 0.3s ease-out;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result.success {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border: 2px solid var(--success-color);
+            color: #065f46;
+        }
+
+        .result.error {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border: 2px solid var(--danger-color);
+            color: #991b1b;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+        }
+
+        .notification {
+            position: fixed;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: var(--transition);
+            margin-bottom: 10px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: var(--success-color);
+        }
+
+        .notification.error {
+            background: var(--danger-color);
+        }
+
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e5e7eb;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .portfolio-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .portfolio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .portfolio-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .portfolio-change {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .portfolio-change.positive {
+            color: var(--success-color);
+        }
+
+        .portfolio-change.negative {
+            color: var(--danger-color);
+        }
+
+        .holdings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .holdings-table th,
+        .holdings-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .holdings-table th {
+            background: var(--dark-bg);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--secondary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .order-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .order-type-btn {
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .order-type-btn.active {
+            border-color: var(--secondary-color);
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--secondary-color);
+        }
+
+        .market-data {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .price-ticker {
+            background: var(--dark-color);
+            color: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            font-family: monospace;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .price-up {
+            color: var(--success-color);
+        }
+
+        .price-down {
+            color: var(--danger-color);
+        }
+
+        .risk-indicators {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .risk-meter {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .risk-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .risk-low { color: var(--success-color); }
+        .risk-medium { color: var(--warning-color); }
+        .risk-high { color: var(--danger-color); }
+
+        .advanced-orders {
+            display: none;
+        }
+
+        .advanced-orders.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--secondary-color);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                justify-content: center;
+            }
+        }
+
+            .stat-label {
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+                font-weight: 500;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-chart-line"></i> Trading Platform</h2>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </div>
+                <div class="nav-item" data-section="trading">
+                    <i class="fas fa-chart-line"></i> Trading
+                </div>
+                <div class="nav-item" data-section="portfolio">
+                    <i class="fas fa-briefcase"></i> Portfolio
+                </div>
+                <div class="nav-item" data-section="xml-processing">
+                    <i class="fas fa-code"></i> XML Processing
+                </div>
+                <div class="nav-item" data-section="trade-messages">
+                    <i class="fas fa-exchange-alt"></i> Trade Messages
+                </div>
+                <div class="nav-item" data-section="ioi">
+                    <i class="fas fa-handshake"></i> IOI Management
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalOrders">0</div>
+                <div class="stat-label">Total Orders</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeIOIs">0</div>
+                <div class="stat-label">Active IOIs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalTrades">0</div>
+                <div class="stat-label">Executed Trades</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="portfolioValue">$0</div>
+                <div class="stat-label">Portfolio Value</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">UP</div>
+                <div class="stat-label">System Status</div>
+            </div>
+        </div>
+
+        <!-- Portfolio Tracker -->
+        <div class="portfolio-section">
+            <div class="portfolio-header">
+                <div>
+                    <h2><i class="fas fa-briefcase"></i> Portfolio Overview</h2>
+                    <div class="portfolio-value" id="totalPortfolioValue">$0.00</div>
+                    <div class="portfolio-change" id="portfolioChange">+$0.00 (0.00%)</div>
+                </div>
+                <div class="risk-indicators">
+                    <div class="risk-meter">
+                        <div class="risk-value risk-low" id="riskScore">Low</div>
+                        <div class="stat-label">Risk Level</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('holdings')">Holdings</button>
+                <button class="tab" onclick="switchTab('performance')">Performance</button>
+                <button class="tab" onclick="switchTab('orders')">Order History</button>
+            </div>
+            
+            <div id="holdings" class="tab-content active">
+                <table class="holdings-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Shares</th>
+                            <th>Avg Cost</th>
+                            <th>Current Price</th>
+                            <th>Market Value</th>
+                            <th>P&L</th>
+                            <th>% Change</th>
+                        </tr>
+                    </thead>
+                    <tbody id="holdingsTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: #6b7280;">No holdings yet. Create your first order!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="performance" class="tab-content">
+                <div class="chart-container">
+                    <canvas id="portfolioChart"></canvas>
+                </div>
+            </div>
+            
+            <div id="orders" class="tab-content">
+                <div id="orderHistory">
+                    <p style="text-align: center; color: #6b7280;">No order history available.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Market Data -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h2>Live Market Data</h2>
+            </div>
+            <div class="market-data">
+                <div class="price-ticker">
+                    <h3>📈 Market Prices</h3>
+                    <div id="priceUpdates">
+                        <div class="price-item">
+                            <span>AAPL</span>
+                            <span class="price-up">$150.50 ↗</span>
+                        </div>
+                        <div class="price-item">
+                            <span>MSFT</span>
+                            <span class="price-down">$300.00 ↘</span>
+                        </div>
+                        <div class="price-item">
+                            <span>GOOGL</span>
+                            <span class="price-up">$2500.00 ↗</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="marketChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Order Management -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <h2>Create Order</h2>
+                </div>
+                <div class="order-types">
+                    <div class="order-type-btn active" onclick="selectOrderType('MARKET')">
+                        ⚡ MARKET
+                    </div>
+                    <div class="order-type-btn" onclick="selectOrderType('LIMIT')">
+                        📊 LIMIT
+                    </div>
+                    <div class="order-type-btn" onclick="selectOrderType('STOP_LOSS')">
+                        🛑 STOP LOSS
+                    </div>
+                    <div class="order-type-btn" onclick="selectOrderType('TAKE_PROFIT')">
+                        🎯 TAKE PROFIT
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="symbol"><i class="fas fa-tag"></i> Symbol</label>
+                        <input type="text" id="symbol" value="AAPL" placeholder="e.g., AAPL" onchange="updateMarketPrice()">
+                    </div>
+                    <div class="form-group">
+                        <label for="side"><i class="fas fa-exchange-alt"></i> Side</label>
+                        <select id="side">
+                            <option value="BUY">🟢 BUY</option>
+                            <option value="SELL">🔴 SELL</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity"><i class="fas fa-hashtag"></i> Quantity</label>
+                        <input type="number" id="quantity" value="100" placeholder="100" onchange="calculateOrderValue()">
+                    </div>
+                    <div class="form-group">
+                        <label for="price"><i class="fas fa-dollar-sign"></i> Price</label>
+                        <input type="number" id="price" value="150.50" step="0.01" placeholder="150.50" onchange="calculateOrderValue()">
+                        <small id="marketPrice" style="color: #6b7280;">Market: $150.50</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="accountId"><i class="fas fa-user"></i> Account ID</label>
+                        <input type="text" id="accountId" value="ACC001" placeholder="ACC001">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-calculator"></i> Order Value</label>
+                        <div id="orderValue" style="font-size: 1.2rem; font-weight: 600; color: var(--primary-color);">$15,050.00</div>
+                    </div>
+                </div>
+                
+                <div class="advanced-orders" id="advancedOrders">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="stopPrice"><i class="fas fa-stop-circle"></i> Stop Price</label>
+                            <input type="number" id="stopPrice" step="0.01" placeholder="Stop price">
+                        </div>
+                        <div class="form-group">
+                            <label for="timeInForce"><i class="fas fa-clock"></i> Time in Force</label>
+                            <select id="timeInForce">
+                                <option value="DAY">Day</option>
+                                <option value="GTC">Good Till Cancelled</option>
+                                <option value="IOC">Immediate or Cancel</option>
+                                <option value="FOK">Fill or Kill</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="createAdvancedOrder()">
+                        <i class="fas fa-plus"></i> Place Order
+                    </button>
+                    <button class="btn btn-secondary" onclick="getOrderBook()">
+                        <i class="fas fa-book"></i> Order Book
+                    </button>
+                    <button class="btn btn-secondary" onclick="calculateRisk()">
+                        <i class="fas fa-shield-alt"></i> Risk Check
+                    </button>
+                    <button class="btn btn-secondary" onclick="toggleAdvanced()">
+                        <i class="fas fa-cog"></i> Advanced
+                    </button>
+                </div>
+                <div id="orderResult" class="result"></div>
+            </div>
+
+            <!-- IOI Management -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h2>Create IOI</h2>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="ioiSymbol"><i class="fas fa-tag"></i> Symbol</label>
+                        <input type="text" id="ioiSymbol" value="MSFT" placeholder="e.g., MSFT">
+                    </div>
+                    <div class="form-group">
+                        <label for="ioiSide"><i class="fas fa-exchange-alt"></i> Side</label>
+                        <select id="ioiSide">
+                            <option value="BUY">🟢 BUY</option>
+                            <option value="SELL">🔴 SELL</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ioiQuantity"><i class="fas fa-hashtag"></i> Quantity</label>
+                        <input type="number" id="ioiQuantity" value="500" placeholder="500">
+                    </div>
+                    <div class="form-group">
+                        <label for="ioiPrice"><i class="fas fa-dollar-sign"></i> Price</label>
+                        <input type="number" id="ioiPrice" value="300.00" step="0.01" placeholder="300.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="brokerId"><i class="fas fa-building"></i> Broker ID</label>
+                        <input type="text" id="brokerId" value="BROKER001" placeholder="BROKER001">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientId"><i class="fas fa-user-tie"></i> Client ID</label>
+                        <input type="text" id="clientId" value="CLIENT001" placeholder="CLIENT001">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="createIOI()">
+                        <i class="fas fa-plus"></i> Create IOI
+                    </button>
+                    <button class="btn btn-secondary" onclick="getActiveIOIs()">
+                        <i class="fas fa-list"></i> Active IOIs
+                    </button>
+                </div>
+                <div id="ioiResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Health Check -->
+        <div class="section">
+            <div class="section-header">
+                <h2>System Health</h2>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-success" onclick="checkHealth()">
+                    <i class="fas fa-stethoscope"></i> Check Health
+                </button>
+                <button class="btn btn-secondary" onclick="getMetrics()">
+                    <i class="fas fa-chart-bar"></i> Get Metrics
+                </button>
+                <button class="btn btn-secondary" onclick="refreshStats()">
+                    <i class="fas fa-sync-alt"></i> Refresh Stats
+                </button>
+            </div>
+            <div id="healthResult" class="result"></div>
+        </div>
+
+        <!-- XML Processing Section -->
+        <div id="xml-processing" class="section" style="display: none;">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <h2>XML Processing - Advanced Trade Message Parsing</h2>
+            </div>
+            <div class="tabs">
+                <button class="tab active" onclick="switchXMLTab('xml-parser')">XML Parser</button>
+                <button class="tab" onclick="switchXMLTab('xml-validator')">XML Validator</button>
+                <button class="tab" onclick="switchXMLTab('xml-transformer')">XML Transformer</button>
+                <button class="tab" onclick="switchXMLTab('batch-processor')">Batch Processor</button>
+            </div>
+
+            <div id="xml-parser" class="tab-content active">
+                <div class="form-section">
+                    <h3>Parse FIX-like XML Trade Messages</h3>
+                    <div class="form-group">
+                        <label for="xmlInput">XML Trade Message</label>
+                        <textarea id="xmlInput" rows="15" placeholder="Paste XML trade message here for parsing..." style="min-height: 300px; width: 100%; font-family: 'Courier New', monospace; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="parseXMLMessage()">
+                            <i class="fas fa-search"></i> Parse XML
+                        </button>
+                        <button class="btn btn-success" onclick="loadSampleXML()">
+                            <i class="fas fa-file-code"></i> Load Sample XML
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearXMLInput()">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                    </div>
+                    <div id="xmlParseResults"></div>
+                </div>
+            </div>
+
+            <div id="xml-validator" class="tab-content">
+                <div class="form-section">
+                    <h3>XML Schema Validation</h3>
+                    <div class="form-group">
+                        <label for="xmlValidateInput">XML Message to Validate</label>
+                        <textarea id="xmlValidateInput" rows="15" placeholder="Paste XML for validation..." style="min-height: 300px; width: 100%; font-family: 'Courier New', monospace; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="messageType">Message Type</label>
+                        <select id="messageType">
+                            <option value="NewOrderSingle">New Order Single</option>
+                            <option value="OrderCancelRequest">Order Cancel Request</option>
+                            <option value="MarketDataRequest">Market Data Request</option>
+                            <option value="TradeReport">Trade Report</option>
+                            <option value="ExecutionReport">Execution Report</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="validateXML()">
+                        <i class="fas fa-check-circle"></i> Validate XML
+                    </button>
+                    <div id="xmlValidateResults"></div>
+                </div>
+            </div>
+
+            <div id="xml-transformer" class="tab-content">
+                <div class="form-section">
+                    <h3>XML to JSON Transformation</h3>
+                    <div class="form-group">
+                        <label for="xmlTransformInput">XML Input</label>
+                        <textarea id="xmlTransformInput" rows="15" placeholder="XML to transform..." style="min-height: 300px; width: 100%; font-family: 'Courier New', monospace; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="transformXMLToJSON()">
+                        <i class="fas fa-exchange-alt"></i> Transform to JSON
+                    </button>
+                    <div id="xmlTransformResults"></div>
+                </div>
+            </div>
+
+            <div id="batch-processor" class="tab-content">
+                <div class="form-section">
+                    <h3>Batch XML Processing</h3>
+                    <div class="form-group">
+                        <label for="batchXmlInput">Multiple XML Messages (separated by empty lines)</label>
+                        <textarea id="batchXmlInput" rows="15" placeholder="Paste multiple XML messages here..." style="min-height: 300px; width: 100%; font-family: 'Courier New', monospace; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="processBatchXML()">
+                            <i class="fas fa-layer-group"></i> Process Batch
+                        </button>
+                        <button class="btn btn-success" onclick="loadBatchSample()">
+                            <i class="fas fa-file-import"></i> Load Batch Sample
+                        </button>
+                    </div>
+                    <div id="batchProcessResults"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trade Messages Section -->
+        <div id="trade-messages" class="section" style="display: none;">
+            <div class="section-header">
+                <div class="section-icon">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <h2>Trade Message Processing Results</h2>
+            </div>
+            <div class="tabs">
+                <button class="tab active" onclick="switchTradeTab('single-message')">Single Message</button>
+                <button class="tab" onclick="switchTradeTab('confirmations')">Confirmations</button>
+                <button class="tab" onclick="switchTradeTab('risk-analysis')">Risk Analysis</button>
+            </div>
+
+            <div id="single-message" class="tab-content active">
+                <div class="form-section">
+                    <h3>Process Trade Message</h3>
+                    <div class="form-group">
+                        <label for="tradeXmlMessage">XML Message</label>
+                        <textarea id="tradeXmlMessage" rows="15" placeholder="Paste XML trade message here..." style="min-height: 300px; width: 100%; font-family: 'Courier New', monospace; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="processTradeMessage()">
+                            <i class="fas fa-cogs"></i> Process Message
+                        </button>
+                        <button class="btn btn-success" onclick="loadTradeMessageSample()">
+                            <i class="fas fa-file-alt"></i> Load Sample
+                        </button>
+                    </div>
+                    <div id="tradeMessageResults"></div>
+                </div>
+            </div>
+
+            <div id="confirmations" class="tab-content">
+                <div class="form-section">
+                    <h3>Generate Trade Confirmation</h3>
+                    <div class="form-group">
+                        <label for="confirmationOrderId">Order ID</label>
+                        <input type="text" id="confirmationOrderId" placeholder="Enter order ID">
+                    </div>
+                    <button class="btn btn-primary" onclick="generateConfirmation()">
+                        <i class="fas fa-file-alt"></i> Generate Confirmation
+                    </button>
+                    <div id="confirmationResults"></div>
+                </div>
+            </div>
+
+            <div id="risk-analysis" class="tab-content">
+                <div class="form-section">
+                    <h3>Risk Analysis for Trade Messages</h3>
+                    <div class="form-group">
+                        <label for="riskAccountId">Account ID</label>
+                        <input type="text" id="riskAccountId" placeholder="TRADER001">
+                    </div>
+                    <button class="btn btn-primary" onclick="analyzeTradeRisk()">
+                        <i class="fas fa-shield-alt"></i> Analyze Risk
+                    </button>
+                    <div id="riskAnalysisResults"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = 'http://localhost:8080';
+        const WS_BASE = 'ws://localhost:8080/ws';
+        let ioiCount = 0;
+        let tradeCount = 0;
+        let orderCount = 0;
+        let selectedOrderType = 'MARKET';
+        let portfolio = {};
+        let orderHistory = [];
+        let marketData = {
+            'AAPL': { price: 150.50, change: 2.5 },
+            'MSFT': { price: 300.00, change: -1.2 },
+            'GOOGL': { price: 2500.00, change: 15.0 },
+            'TSLA': { price: 800.00, change: 5.5 },
+            'AMZN': { price: 3200.00, change: -8.0 }
+        };
+        let portfolioChart = null;
+        let marketChart = null;
+        let currentUser = null;
+        let authToken = null;
+
+        // Authentication functions
+        function checkAuthentication() {
+            try {
+                const token = localStorage.getItem('authToken') || localStorage.getItem('tradingToken');
+                const user = localStorage.getItem('currentUser') || localStorage.getItem('tradingUser');
+                
+                console.log('Auth check - Token:', token ? 'exists' : 'missing');
+                console.log('Auth check - User:', user ? 'exists' : 'missing');
+                
+                if (token && user) {
+                    authToken = token;
+                    currentUser = JSON.parse(user);
+                    updateUserInfo();
+                    return true;
+                } else {
+                    console.log('No valid authentication found, redirecting...');
+                    redirectToAuth();
+                    return false;
+                }
+            } catch (error) {
+                console.error('Authentication check failed:', error);
+                redirectToAuth();
+                return false;
+            }
+        }
+
+        function updateUserInfo() {
+            const userInfoElement = document.getElementById('userInfo');
+            if (userInfoElement && currentUser) {
+                userInfoElement.textContent = `Welcome, ${currentUser.fullName || currentUser.username}`;
+            }
+        }
+
+        function redirectToAuth() {
+            window.location.href = '/auth.html';
+        }
+
+        function logout() {
+            try {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('tradingToken');
+                localStorage.removeItem('tradingUser');
+                authToken = null;
+                currentUser = null;
+                redirectToAuth();
+            } catch (error) {
+                console.error('Logout failed:', error);
+                // Force redirect even if localStorage fails
+                window.location.href = '/auth.html';
+            }
+        }
+
+        async function apiCall(endpoint, method = 'GET', data = null, contentType = 'application/json') {
+            const button = event?.target;
+            let originalText = '';
+            
+            if (button && button.innerHTML) {
+                originalText = button.innerHTML;
+                button.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+                button.disabled = true;
+            }
+
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': contentType
+                    }
+                };
+
+                // Add authentication token if available
+                if (authToken) {
+                    options.headers['Authorization'] = authToken;
+                }
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                
+                if (response.status === 401) {
+                    // Token expired or invalid, redirect to auth
+                    logout();
+                    return null;
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Reset button state on success
+                if (button && originalText) {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }
+                
+                return result;
+            } catch (error) {
+                console.error('API call failed:', error);
+                showNotification(`API Error: ${error.message}`, 'error');
+                
+                if (button && originalText) {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }
+                return { success: false, error: error.message };
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+            
+            // Calculate position based on existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            let topPosition = 20;
+            existingNotifications.forEach(existing => {
+                topPosition += existing.offsetHeight + 10;
+            });
+            notification.style.top = topPosition + 'px';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        function showResult(elementId, result, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = isError ? 'result error' : 'result success';
+            
+            const header = document.createElement('div');
+            header.className = 'result-header';
+            header.innerHTML = `
+                <i class="fas ${isError ? 'fa-times-circle' : 'fa-check-circle'}"></i>
+                ${isError ? 'Error Response' : 'Success Response'}
+            `;
+            
+            const content = document.createElement('div');
+            content.className = 'result-content';
+            
+            // Check if result is HTML (contains HTML tags)
+            if (typeof result === 'string' && result.includes('<div')) {
+                content.innerHTML = result;
+            } else {
+                // For non-HTML content, use pre formatting
+                const pre = document.createElement('pre');
+                pre.textContent = typeof result === 'object' ? JSON.stringify(result, null, 2) : result;
+                content.appendChild(pre);
+            }
+            
+            element.innerHTML = '';
+            element.appendChild(header);
+            element.appendChild(content);
+        }
+
+        // Legacy function for compatibility
+        async function createOrder() {
+            return createAdvancedOrder();
+        }
+
+        async function getOrderBook() {
+            const symbol = document.getElementById('symbol').value;
+            if (!symbol) {
+                showNotification('Please enter a symbol to view order book', 'error');
+                return;
+            }
+            const result = await apiCall(`/api/orders/orderbook/${symbol}`);
+            
+            if (result && result.symbol) {
+                // Success - result is the order book data directly
+                const orderBookDisplay = `
+                    <div class="order-book">
+                        <h4>Order Book for ${result.symbol}</h4>
+                        <div class="order-book-data">
+                            <div><strong>Best Bid:</strong> $${result.bestBid || 'N/A'}</div>
+                            <div><strong>Best Ask:</strong> $${result.bestAsk || 'N/A'}</div>
+                            <div><strong>Spread:</strong> $${result.spread || 'N/A'}</div>
+                            <div><strong>Total Bid Orders:</strong> ${result.totalBidOrders}</div>
+                            <div><strong>Total Ask Orders:</strong> ${result.totalAskOrders}</div>
+                        </div>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    </div>
+                `;
+                showResult('orderResult', orderBookDisplay, false);
+            } else if (result && result.error) {
+                // Error case from apiCall
+                showResult('orderResult', result.error, true);
+            } else {
+                // Unexpected response
+                showResult('orderResult', 'Failed to load order book', true);
+            }
+        }
+
+        async function createIOI() {
+            console.log('=== IOI CREATION STARTED ===');
+            
+            const symbolEl = document.getElementById('ioiSymbol');
+            const sideEl = document.getElementById('ioiSide');
+            const quantityEl = document.getElementById('ioiQuantity');
+            const priceEl = document.getElementById('ioiPrice');
+            const clientIdEl = document.getElementById('clientId');
+            const brokerIdEl = document.getElementById('brokerId');
+            
+            console.log('IOI Form elements found:', {
+                symbolEl: !!symbolEl,
+                sideEl: !!sideEl,
+                quantityEl: !!quantityEl,
+                priceEl: !!priceEl,
+                clientIdEl: !!clientIdEl,
+                brokerIdEl: !!brokerIdEl
+            });
+            
+            if (!symbolEl || !sideEl || !quantityEl || !priceEl || !clientIdEl || !brokerIdEl) {
+                showNotification('IOI form elements not found. Please refresh the page.', 'error');
+                console.error('Missing IOI form elements');
+                return;
+            }
+            
+            const symbol = symbolEl.value;
+            const side = sideEl.value;
+            const quantity = parseFloat(quantityEl.value);
+            const price = parseFloat(priceEl.value);
+            const clientId = clientIdEl.value;
+            const brokerId = brokerIdEl.value;
+            
+            console.log('IOI Form values:', { symbol, side, quantity, price, clientId, brokerId });
+            
+            // Validation
+            if (!symbol || !side || !quantity || !clientId || !brokerId) {
+                showNotification('Please fill in all required fields', 'error');
+                console.log('Validation failed: missing required fields');
+                return;
+            }
+            
+            if (isNaN(quantity) || quantity <= 0) {
+                showNotification('Please enter a valid quantity', 'error');
+                console.log('Validation failed: invalid quantity');
+                return;
+            }
+            
+            if (price && (isNaN(price) || price <= 0)) {
+                showNotification('Please enter a valid price', 'error');
+                console.log('Validation failed: invalid price');
+                return;
+            }
+            
+            const ioiData = {
+                symbol: symbol.toUpperCase(),
+                side: side.toUpperCase(),
+                quantity: quantity,
+                price: price || null,
+                clientId: clientId,
+                brokerId: brokerId
+            };
+            
+            console.log('IOI data to send:', JSON.stringify(ioiData, null, 2));
+            
+            try {
+                const response = await fetch('http://localhost:8080/api/ioi', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(ioiData)
+                });
+                
+                console.log('IOI Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('IOI Error response:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log('IOI creation result:', data);
+                
+                if (data && data.ioiId) {
+                    ioiCount++;
+                    document.getElementById('activeIOIs').textContent = ioiCount;
+                    showNotification(`IOI ${data.ioiId} created successfully!`);
+                    showResult('ioiResult', data, false);
+                } else {
+                    console.error('Unexpected IOI response:', data);
+                    showNotification('Failed to create IOI: Unexpected response', 'error');
+                    showResult('ioiResult', 'Unexpected response from server', true);
+                }
+            } catch (error) {
+                console.error('IOI creation failed:', error);
+                showNotification(`IOI creation failed: ${error.message}`, 'error');
+                showResult('ioiResult', error.message, true);
+            }
+        }
+
+        async function getActiveIOIs() {
+            try {
+                const response = await fetch('http://localhost:8080/api/ioi/active');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('ioiResult', data, false);
+                    document.getElementById('activeIOIs').textContent = data.length;
+                    ioiCount = data.length;
+                } else {
+                    showResult('ioiResult', 'Failed to fetch active IOIs', true);
+                }
+            } catch (error) {
+                showResult('ioiResult', error.message, true);
+            }
+        }
+
+        async function checkHealth() {
+            // Disabled to prevent 404 errors - health check endpoint not available
+            console.log('Health check disabled to prevent API errors');
+            showNotification('Health check disabled');
+        }
+
+        async function getMetrics() {
+            // Disabled to prevent 404 errors - metrics endpoint not available
+            console.log('Metrics disabled to prevent API errors');
+            showNotification('Metrics disabled');
+        }
+
+        async function refreshStats() {
+            // Disabled to prevent 404 errors - stats will be updated manually
+            console.log('Stats refresh disabled to prevent API errors');
+            showNotification('Statistics refresh disabled');
+        }
+
+        // Auto-refresh stats every 30 seconds - disabled to prevent API errors
+        // setInterval(refreshStats, 30000);
+
+        // Advanced Order Functions
+        function selectOrderType(type) {
+            selectedOrderType = type;
+            document.querySelectorAll('.order-type-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const advancedOrders = document.getElementById('advancedOrders');
+            if (type === 'STOP_LOSS' || type === 'TAKE_PROFIT') {
+                advancedOrders.classList.add('show');
+            } else {
+                advancedOrders.classList.remove('show');
+            }
+        }
+
+        function toggleAdvanced() {
+            const advancedOrders = document.getElementById('advancedOrders');
+            advancedOrders.classList.toggle('show');
+        }
+
+        function updateMarketPrice() {
+            const symbol = document.getElementById('symbol').value.toUpperCase();
+            const marketPrice = marketData[symbol]?.price || 0;
+            document.getElementById('marketPrice').textContent = `Market: $${marketPrice.toFixed(2)}`;
+            document.getElementById('price').value = marketPrice;
+            calculateOrderValue();
+        }
+
+        function calculateOrderValue() {
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            const price = parseFloat(document.getElementById('price').value) || 0;
+            const value = quantity * price;
+            document.getElementById('orderValue').textContent = `$${value.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        }
+
+        function calculateRisk() {
+            const symbol = document.getElementById('symbol').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const price = parseFloat(document.getElementById('price').value);
+            const orderValue = quantity * price;
+            
+            let riskLevel = 'Low';
+            let riskClass = 'risk-low';
+            
+            if (orderValue > 50000) {
+                riskLevel = 'High';
+                riskClass = 'risk-high';
+            } else if (orderValue > 20000) {
+                riskLevel = 'Medium';
+                riskClass = 'risk-medium';
+            }
+            
+            document.getElementById('riskScore').textContent = riskLevel;
+            document.getElementById('riskScore').className = `risk-value ${riskClass}`;
+            
+            showNotification(`Risk Assessment: ${riskLevel} (Order Value: $${orderValue.toLocaleString()})`);
+        }
+
+        async function createAdvancedOrder() {
+            const symbol = document.getElementById('symbol').value;
+            const side = document.getElementById('side').value;
+            const quantity = document.getElementById('quantity').value;
+            const price = document.getElementById('price').value;
+            const accountId = document.getElementById('accountId').value;
+
+            // Validate required fields
+            if (!symbol || !side || !quantity || !accountId) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+
+            // For LIMIT orders, price is required
+            if (selectedOrderType === 'LIMIT' && (!price || parseFloat(price) <= 0)) {
+                showNotification('Price is required for LIMIT orders', 'error');
+                return;
+            }
+
+            const orderData = {
+                symbol: symbol.toUpperCase(),
+                side: side.toUpperCase(), // BUY or SELL
+                type: selectedOrderType === 'MARKET' ? 'MARKET' : 'LIMIT',
+                quantity: parseFloat(quantity),
+                accountId: accountId
+            };
+
+            // Add price for LIMIT orders, simulate market price for MARKET orders
+            if (orderData.type === 'LIMIT') {
+                orderData.price = parseFloat(price);
+            } else if (orderData.type === 'MARKET') {
+                // Simulate market execution price based on current market data
+                const currentPrice = marketData[symbol]?.price || 200.00; // Default to $200 if no market data
+                orderData.price = currentPrice;
+            }
+
+            console.log('Sending order data:', JSON.stringify(orderData, null, 2));
+            
+            const result = await apiCall('/api/orders', 'POST', orderData);
+            console.log('Order creation result:', result);
+            
+            if (result && result.orderId) {
+                // Success - result is the order object directly
+                showResult('orderResult', `Order ${result.orderId} created successfully!`, false);
+                
+                orderCount++;
+                document.getElementById('totalOrders').textContent = orderCount;
+                
+                // Update portfolio simulation
+                updatePortfolioSimulation(orderData);
+                
+                // Add to order history with FILLED status for simulation
+                const newOrder = {
+                    ...orderData,
+                    orderId: result.orderId,
+                    timestamp: new Date().toISOString(),
+                    status: 'FILLED', // Simulate immediate execution
+                    avgPrice: orderData.price // Set execution price
+                };
+                
+                orderHistory.unshift(newOrder);
+                
+                // Save to localStorage for persistence
+                saveUserData();
+                
+                updateOrderHistory();
+                updatePortfolioSimulationDisplay(); // Update portfolio display
+                showNotification(`${selectedOrderType} order created successfully!`);
+            } else if (result && result.error) {
+                // Error case from apiCall
+                console.error('Order creation failed:', result.error);
+                showResult('orderResult', result.error, true);
+                showNotification(`Failed to create order: ${result.error}`, 'error');
+            } else {
+                // Unexpected response
+                console.error('Unexpected API response:', result);
+                showResult('orderResult', 'Unexpected response from server', true);
+                showNotification('Failed to create order: Unexpected response', 'error');
+            }
+        }
+
+        function updatePortfolioSimulation(order) {
+            const symbol = order.symbol;
+            const quantity = order.side === 'BUY' ? order.quantity : -order.quantity;
+            const price = order.price;
+            
+            console.log(`Portfolio Update - ${symbol}:`, {
+                side: order.side,
+                quantity: order.quantity,
+                price: price,
+                calculatedQuantity: quantity
+            });
+            
+            if (!portfolio[symbol]) {
+                portfolio[symbol] = { shares: 0, avgCost: 0, totalCost: 0 };
+            }
+            
+            const holding = portfolio[symbol];
+            const oldShares = holding.shares;
+            const oldTotalCost = holding.totalCost;
+            
+            if (quantity > 0) { // BUY
+                const newShares = oldShares + quantity;
+                const newTotalCost = oldTotalCost + (quantity * price);
+                holding.shares = newShares;
+                holding.totalCost = newTotalCost;
+                holding.avgCost = newTotalCost / newShares;
+            } else { // SELL
+                const sellQuantity = Math.abs(quantity);
+                const newShares = oldShares - sellQuantity;
+                
+                if (newShares > 0) {
+                    // Partial sell - reduce cost proportionally
+                    const costReduction = (sellQuantity / oldShares) * oldTotalCost;
+                    holding.shares = newShares;
+                    holding.totalCost = oldTotalCost - costReduction;
+                    holding.avgCost = holding.totalCost / holding.shares;
+                } else {
+                    // Complete sell or oversell
+                    delete portfolio[symbol];
+                }
+            }
+            
+            console.log(`After update - ${symbol}:`, portfolio[symbol] || 'DELETED');
+        }
+        
+        function updatePortfolioSimulationDisplay() {
+            const tbody = document.getElementById('holdingsTableBody');
+            tbody.innerHTML = '';
+            
+            let totalValue = 0;
+            let totalCost = 0;
+            
+            // Calculate portfolio from current user's orders only
+            const userPortfolio = {};
+            
+            // Process only current session orders (user-specific)
+            orderHistory.forEach(order => {
+                if (order.status === 'FILLED' || order.status === 'PARTIALLY_FILLED') {
+                    const symbol = order.symbol;
+                    const quantity = order.side === 'BUY' ? order.quantity : -order.quantity;
+                    const price = order.price || order.avgPrice || 0;
+                    
+                    if (!userPortfolio[symbol]) {
+                        userPortfolio[symbol] = {
+                            quantity: 0,
+                            totalCost: 0,
+                            avgPrice: 0
+                        };
+                    }
+                    
+                    const holding = userPortfolio[symbol];
+                    const oldQuantity = holding.quantity;
+                    const newQuantity = oldQuantity + quantity;
+                    
+                    if (newQuantity !== 0) {
+                        if (quantity > 0) { // Buy order
+                            holding.totalCost += quantity * price;
+                            holding.quantity = newQuantity;
+                            holding.avgPrice = holding.totalCost / holding.quantity;
+                        } else { // Sell order
+                            const sellQuantity = Math.abs(quantity);
+                            if (oldQuantity > 0) {
+                                // Reduce cost basis proportionally
+                                const costReduction = (sellQuantity / oldQuantity) * holding.totalCost;
+                                holding.totalCost -= costReduction;
+                                holding.quantity = newQuantity;
+                                if (holding.quantity > 0) {
+                                    holding.avgPrice = holding.totalCost / holding.quantity;
+                                } else {
+                                    holding.avgPrice = 0;
+                                }
+                            }
+                        }
+                    } else {
+                        // Position closed
+                        holding.quantity = 0;
+                        holding.totalCost = 0;
+                        holding.avgPrice = 0;
+                    }
+                }
+            });
+            
+            // Remove zero positions
+            Object.keys(userPortfolio).forEach(symbol => {
+                if (userPortfolio[symbol].quantity === 0) {
+                    delete userPortfolio[symbol];
+                }
+            });
+            
+            if (Object.keys(userPortfolio).length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #6b7280;">No holdings yet. Create your first order!</td></tr>';
+                // Reset portfolio display values
+                document.getElementById('totalPortfolioValue').textContent = '$0.00';
+                document.getElementById('portfolioValue').textContent = '$0';
+                const changeElement = document.getElementById('portfolioChange');
+                changeElement.textContent = '+$0.00 (0.00%)';
+                changeElement.className = 'portfolio-change profit';
+                return;
+            }
+            
+            for (const [symbol, holding] of Object.entries(userPortfolio)) {
+                const currentPrice = marketData[symbol]?.price || holding.avgPrice;
+                const marketValue = holding.quantity * currentPrice;
+                const pnl = marketValue - holding.totalCost;
+                const pnlPercent = holding.totalCost > 0 ? (pnl / holding.totalCost) * 100 : 0;
+                
+                console.log(`Portfolio Debug - ${symbol}:`, {
+                    quantity: holding.quantity,
+                    avgPrice: holding.avgPrice,
+                    totalCost: holding.totalCost,
+                    currentPrice: currentPrice,
+                    marketValue: marketValue,
+                    pnl: pnl,
+                    pnlPercent: pnlPercent
+                });
+                
+                totalValue += marketValue;
+                totalCost += holding.totalCost;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${symbol}</td>
+                    <td>${holding.quantity.toLocaleString()}</td>
+                    <td>$${(holding.avgPrice || 0).toFixed(2)}</td>
+                    <td>$${(currentPrice || 0).toFixed(2)}</td>
+                    <td>$${(marketValue || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                    <td class="${pnl >= 0 ? 'profit' : 'loss'}">$${(isNaN(pnl) ? 0 : pnl).toFixed(2)}</td>
+                    <td class="${pnl >= 0 ? 'profit' : 'loss'}">${(isNaN(pnlPercent) ? 0 : pnlPercent).toFixed(2)}%</td>
+                `;
+                tbody.appendChild(row);
+            }
+            
+            const totalPnL = totalValue - totalCost;
+            const totalPnLPercent = totalCost > 0 ? (totalPnL / totalCost) * 100 : 0;
+            
+            console.log('Portfolio Overview Calculation:', {
+                totalValue: totalValue,
+                totalCost: totalCost,
+                totalPnL: totalPnL,
+                totalPnLPercent: totalPnLPercent
+            });
+            
+            document.getElementById('totalPortfolioValue').textContent = `$${(totalValue || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('portfolioValue').textContent = `$${(totalValue || 0).toLocaleString()}`;
+            
+            const changeElement = document.getElementById('portfolioChange');
+            const displayPnL = isNaN(totalPnL) ? 0 : totalPnL;
+            const displayPercent = isNaN(totalPnLPercent) ? 0 : totalPnLPercent;
+            
+            changeElement.textContent = `${displayPnL >= 0 ? '+' : ''}$${displayPnL.toFixed(2)} (${displayPercent.toFixed(2)}%)`;
+            changeElement.className = `portfolio-change ${displayPnL >= 0 ? 'profit' : 'loss'}`;
+        }
+
+        async function updateOrderHistory() {
+            const historyDiv = document.getElementById('orderHistory');
+            console.log('Updating order history...');
+            
+            try {
+                // Get current user info
+                const currentUser = JSON.parse(localStorage.getItem('tradingUser') || '{}');
+                const currentUsername = currentUser.username || 'unknown';
+                console.log('Fetching orders for user:', currentUsername);
+                
+                // Only show simulation orders for current session (user-specific)
+                let hasSimulationData = orderHistory.length > 0;
+                console.log('Current session orders available:', hasSimulationData ? orderHistory.length : 0);
+                
+                // Try to fetch user-specific orders from backend with authentication
+                const allOrders = [];
+                const token = localStorage.getItem('tradingToken');
+                
+                if (token) {
+                    // Get user's orders with authentication
+                    try {
+                        console.log('Fetching authenticated user orders...');
+                        const response = await fetch('http://localhost:8080/api/orders', {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const userOrders = await response.json();
+                            if (Array.isArray(userOrders) && userOrders.length > 0) {
+                                console.log(`Found ${userOrders.length} orders for current user`);
+                                allOrders.push(...userOrders);
+                            } else {
+                                console.log('No backend orders found for current user');
+                            }
+                        } else {
+                            console.log('Could not fetch user orders, status:', response.status);
+                        }
+                    } catch (e) {
+                        console.log('Could not fetch user orders:', e.message);
+                    }
+                } else {
+                    console.log('No authentication token found, skipping backend orders');
+                }
+                
+                console.log('Total backend orders fetched:', allOrders.length);
+                
+                // Combine simulation data with backend data
+                const combinedOrders = [...allOrders];
+                
+                // Add simulation orders if available
+                if (hasSimulationData) {
+                    console.log('Adding simulation orders to history');
+                    combinedOrders.push(...orderHistory);
+                }
+                
+                // Remove duplicates based on orderId
+                const uniqueOrders = combinedOrders.filter((order, index, self) => 
+                    index === self.findIndex(o => (o.orderId || o.id) === (order.orderId || order.id))
+                );
+                
+                // Sort by timestamp (most recent first)
+                uniqueOrders.sort((a, b) => {
+                    const timeA = new Date(a.timestamp || a.createdAt || a.createTime || Date.now());
+                    const timeB = new Date(b.timestamp || b.createdAt || b.createTime || Date.now());
+                    return timeB - timeA;
+                });
+                
+                if (uniqueOrders.length === 0) {
+                    console.log('No orders found, showing empty state');
+                    historyDiv.innerHTML = '<p style="text-align: center; color: #6b7280;">No order history available. Create some orders to see them here!</p>';
+                    return;
+                }
+                
+                console.log('Displaying', uniqueOrders.length, 'unique orders');
+                historyDiv.innerHTML = `
+                    <table class="holdings-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Time</th>
+                                <th>Symbol</th>
+                                <th>Side</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${uniqueOrders.map(order => `
+                                <tr>
+                                    <td>${order.orderId || order.id || 'N/A'}</td>
+                                    <td>${new Date(order.timestamp || order.createdAt || order.createTime || Date.now()).toLocaleString()}</td>
+                                    <td>${order.symbol || 'N/A'}</td>
+                                    <td class="${(order.side || 'unknown').toLowerCase()}">${order.side || 'UNKNOWN'}</td>
+                                    <td>${(order.quantity || 0).toLocaleString()}</td>
+                                    <td>$${(order.price || 0).toFixed(2)}</td>
+                                    <td class="status-${(order.status || 'unknown').toLowerCase()}">${order.status || 'UNKNOWN'}</td>
+                                    <td>$${((order.quantity || 0) * (order.price || 0)).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+            } catch (error) {
+                console.error('Error fetching order history:', error);
+                // Show error message
+                historyDiv.innerHTML = '<p style="text-align: center; color: #ef4444;">Error loading order history. Please try again.</p>';
+            }
+        }
+        
+        function updateOrderHistorySimulation() {
+            const historyDiv = document.getElementById('orderHistory');
+            if (orderHistory.length === 0) {
+                historyDiv.innerHTML = '<p style="text-align: center; color: #6b7280;">No order history available.</p>';
+                return;
+            }
+            
+            historyDiv.innerHTML = `
+                <table class="holdings-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Symbol</th>
+                            <th>Side</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${orderHistory.map(order => `
+                            <tr>
+                                <td>${new Date(order.timestamp).toLocaleTimeString()}</td>
+                                <td>${order.symbol}</td>
+                                <td class="${order.side.toLowerCase()}">${order.side}</td>
+                                <td>${order.quantity.toLocaleString()}</td>
+                                <td>$${order.price.toFixed(2)}</td>
+                                <td class="status-${order.status.toLowerCase()}">${order.status}</td>
+                                <td>$${(order.quantity * order.price).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'orders') {
+                updateOrderHistory();
+            } else if (tabName === 'holdings') {
+                if (typeof updatePortfolioDisplay === 'function') {
+                    updatePortfolioDisplay();
+                }
+            } else if (tabName === 'performance') {
+                updatePerformanceChart();
+            }
+        }
+        
+        async function updatePerformanceChart() {
+            try {
+                // Fetch real order data to calculate performance over time
+                const allOrders = [];
+                const statuses = ['FILLED', 'PARTIALLY_FILLED'];
+                
+                for (const status of statuses) {
+                    try {
+                        const orders = await fetch(`http://localhost:8080/api/orders/status/${status}`)
+                            .then(r => r.json())
+                            .catch(() => []);
+                        allOrders.push(...orders);
+                    } catch (e) {
+                        console.log(`Could not fetch ${status} orders for performance`);
+                    }
+                }
+                
+                if (allOrders.length === 0) {
+                    // Use default chart data if no real orders
+                    return;
+                }
+                
+                // Sort orders by timestamp
+                allOrders.sort((a, b) => new Date(a.timestamp || a.createdAt || 0) - new Date(b.timestamp || b.createdAt || 0));
+                
+                // Calculate portfolio value over time
+                const portfolioHistory = [];
+                let runningPortfolio = {};
+                let runningValue = 0;
+                
+                allOrders.forEach((order, index) => {
+                    const symbol = order.symbol;
+                    const quantity = order.side === 'BUY' ? (order.filledQuantity || order.quantity) : -(order.filledQuantity || order.quantity);
+                    const price = order.price;
+                    
+                    if (!runningPortfolio[symbol]) {
+                        runningPortfolio[symbol] = { quantity: 0, totalCost: 0 };
+                    }
+                    
+                    runningPortfolio[symbol].quantity += quantity;
+                    if (order.side === 'BUY') {
+                        runningPortfolio[symbol].totalCost += (order.filledQuantity || order.quantity) * price;
+                    }
+                    
+                    // Calculate current portfolio value (simplified - using last trade price)
+                    let currentValue = 0;
+                    for (const [sym, holding] of Object.entries(runningPortfolio)) {
+                        if (holding.quantity > 0) {
+                            const currentPrice = marketData[sym]?.price || price; // Use market price or last trade price
+                            currentValue += holding.quantity * currentPrice;
+                        }
+                    }
+                    
+                    portfolioHistory.push({
+                        date: new Date(order.timestamp || order.createdAt || Date.now()),
+                        value: currentValue
+                    });
+                });
+                
+                // Update chart with real data
+                if (portfolioChart && portfolioHistory.length > 1) {
+                    const labels = portfolioHistory.map(p => p.date.toLocaleDateString());
+                    const values = portfolioHistory.map(p => p.value);
+                    
+                    portfolioChart.data.labels = labels.slice(-10); // Show last 10 data points
+                    portfolioChart.data.datasets[0].data = values.slice(-10);
+                    portfolioChart.update();
+                }
+                
+            } catch (error) {
+                console.error('Error updating performance chart:', error);
+            }
+        }
+
+        function initializeCharts() {
+            // Destroy existing charts to prevent canvas reuse error
+            if (portfolioChart) {
+                portfolioChart.destroy();
+                portfolioChart = null;
+            }
+            if (marketChart) {
+                marketChart.destroy();
+                marketChart = null;
+            }
+            
+            // Portfolio Performance Chart
+            const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+            portfolioChart = new Chart(portfolioCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1D', '1W', '1M', '3M', '6M', '1Y'],
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: [10000, 10500, 11200, 10800, 12500, 15000],
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Market Data Chart  
+            const marketCtx = document.getElementById('marketChart').getContext('2d');
+            marketChart = new Chart(marketCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(marketData),
+                    datasets: [{
+                        label: 'Price Change %',
+                        data: Object.values(marketData).map(stock => (stock.change / stock.price * 100).toFixed(2)),
+                        backgroundColor: Object.values(marketData).map(stock => 
+                            stock.change >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'
+                        ),
+                        borderColor: Object.values(marketData).map(stock => 
+                            stock.change >= 0 ? 'rgb(16, 185, 129)' : 'rgb(239, 68, 68)'
+                        ),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateMarketData() {
+            // Simulate real-time price updates with more realistic movements
+            Object.keys(marketData).forEach(symbol => {
+                const changePercent = (Math.random() - 0.5) * 0.02; // ±1% change
+                const change = marketData[symbol].price * changePercent;
+                marketData[symbol].price += change;
+                marketData[symbol].change = change;
+                
+                console.log(`Market Update - ${symbol}: $${marketData[symbol].price.toFixed(2)} (${change >= 0 ? '+' : ''}${change.toFixed(2)})`);
+            });
+            
+            // Update price ticker
+            const priceUpdates = document.getElementById('priceUpdates');
+            priceUpdates.innerHTML = Object.entries(marketData).slice(0, 3).map(([symbol, data]) => `
+                <div class="price-item">
+                    <span>${symbol}</span>
+                    <span class="${data.change >= 0 ? 'price-up' : 'price-down'}">
+                        $${data.price.toFixed(2)} ${data.change >= 0 ? '↗' : '↘'}
+                    </span>
+                </div>
+            `).join('');
+            
+            // Update portfolio display with new market prices
+            updatePortfolioSimulationDisplay();
+            
+            // Update charts if they exist
+            if (marketChart) {
+                marketChart.data.datasets[0].data = Object.values(marketData).map(stock => 
+                    (stock.change / stock.price * 100).toFixed(2)
+                );
+                marketChart.update('none');
+            }
+        }
+
+        // Auto-refresh market data every 5 seconds
+        setInterval(updateMarketData, 5000);
+        
+        // Data persistence functions
+        function saveUserData() {
+            const currentUser = JSON.parse(localStorage.getItem('tradingUser') || '{}');
+            const userKey = `tradingData_${currentUser.username || 'default'}`;
+            
+            const userData = {
+                orderHistory: orderHistory,
+                orderCount: orderCount,
+                timestamp: new Date().toISOString()
+            };
+            
+            localStorage.setItem(userKey, JSON.stringify(userData));
+            console.log('Saved user data for:', currentUser.username);
+        }
+        
+        function loadUserData() {
+            const currentUser = JSON.parse(localStorage.getItem('tradingUser') || '{}');
+            const userKey = `tradingData_${currentUser.username || 'default'}`;
+            
+            const savedData = localStorage.getItem(userKey);
+            if (savedData) {
+                try {
+                    const userData = JSON.parse(savedData);
+                    orderHistory.length = 0; // Clear current data
+                    orderHistory.push(...(userData.orderHistory || []));
+                    orderCount = userData.orderCount || 0;
+                    
+                    console.log('Loaded user data for:', currentUser.username);
+                    console.log('Restored', orderHistory.length, 'orders');
+                    
+                    // Update UI
+                    document.getElementById('totalOrders').textContent = orderCount;
+                    updateOrderHistory();
+                    updatePortfolioSimulationDisplay();
+                } catch (e) {
+                    console.error('Error loading user data:', e);
+                }
+            } else {
+                console.log('No saved data found for user:', currentUser.username);
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication first - this must happen immediately
+            console.log('Checking authentication on page load...');
+            if (!checkAuthentication()) {
+                console.log('Authentication failed, redirecting to auth page');
+                return; // Will redirect to auth page
+            }
+            
+            // Load user-specific data instead of clearing
+            loadUserData();
+            
+            console.log('Authentication successful, initializing dashboard');
+            // initializeNavigation();
+            // loadDashboard();
+            // loadMarketData();
+            // loadPortfolioData();
+            // loadOrderHistory();
+            
+            // Initialize charts after a short delay to ensure DOM is ready
+            setTimeout(() => {
+                initializeCharts();
+            }, 100);
+            
+            // Add logout button event listener
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', logout);
+            }
+        });
+
+        // Navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const section = item.dataset.section;
+                    showSection(section);
+                    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                    item.classList.add('active');
+                });
+            });
+            
+            // Load initial data
+            checkHealth();
+            refreshStats();
+            initializeCharts();
+            calculateOrderValue();
+            updateMarketPrice();
+            showNotification('Mini Equities Trading Platform loaded successfully!');
+        });
+        
+        function showSection(sectionName) {
+            // Hide all sections first
+            document.querySelectorAll('.section, .portfolio-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show relevant sections based on navigation
+            switch(sectionName) {
+                case 'dashboard':
+                    document.querySelectorAll('.stats-grid, .section').forEach(el => {
+                        if (el.querySelector('h2')?.textContent.includes('Live Market Data')) {
+                            el.style.display = 'block';
+                        }
+                    });
+                    document.querySelector('.stats-grid').style.display = 'grid';
+                    break;
+                case 'trading':
+                    document.querySelectorAll('.section').forEach(el => {
+                        if (el.querySelector('h2')?.textContent.includes('Order') || 
+                            el.querySelector('h2')?.textContent.includes('Trading')) {
+                            el.style.display = 'block';
+                        }
+                    });
+                    break;
+                case 'portfolio':
+                    document.querySelector('.portfolio-section').style.display = 'block';
+                    break;
+                case 'xml-processing':
+                    document.getElementById('xml-processing').style.display = 'block';
+                    break;
+                case 'trade-messages':
+                    document.getElementById('trade-messages').style.display = 'block';
+                    break;
+                case 'ioi':
+                    document.querySelectorAll('.section').forEach(el => {
+                        if (el.querySelector('h2')?.textContent.includes('IOI')) {
+                            el.style.display = 'block';
+                        }
+                    });
+                    break;
+                default:
+                    document.querySelectorAll('.section, .portfolio-section, .stats-grid').forEach(el => {
+                        el.style.display = el.classList.contains('stats-grid') ? 'grid' : 'block';
+                    });
+            }
+        }
+
+        // XML Processing Functions
+        function switchXMLTab(tabName) {
+            document.querySelectorAll('#xml-processing .tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('#xml-processing .tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function switchTradeTab(tabName) {
+            document.querySelectorAll('#trade-messages .tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('#trade-messages .tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function parseXMLMessage() {
+            const xmlInput = document.getElementById('xmlInput').value;
+            if (!xmlInput.trim()) {
+                showXMLResult('xmlParseResults', 'Please enter XML content to parse', 'error');
+                return;
+            }
+
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlInput, 'text/xml');
+                
+                if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                    showXMLResult('xmlParseResults', 'Invalid XML format', 'error');
+                    return;
+                }
+
+                const messageType = xmlDoc.documentElement.tagName;
+                const symbol = getXMLValue(xmlDoc, 'Symbol') || getXMLValue(xmlDoc, 'symbol');
+                const side = getXMLValue(xmlDoc, 'Side') || getXMLValue(xmlDoc, 'side');
+                const quantity = getXMLValue(xmlDoc, 'OrderQty') || getXMLValue(xmlDoc, 'quantity');
+                const price = getXMLValue(xmlDoc, 'Price') || getXMLValue(xmlDoc, 'price');
+                const orderId = getXMLValue(xmlDoc, 'ClOrdID') || getXMLValue(xmlDoc, 'orderId');
+
+                const parsedData = {
+                    messageType, symbol, side, quantity, price, orderId,
+                    timestamp: new Date().toISOString()
+                };
+
+                const resultHTML = `
+                    <div class="result success">
+                        <h4><i class="fas fa-check-circle"></i> XML Parsed Successfully</h4>
+                        <div class="data-rows">
+                            <div><strong>Message Type:</strong> ${parsedData.messageType}</div>
+                            <div><strong>Symbol:</strong> ${parsedData.symbol || 'N/A'}</div>
+                            <div><strong>Side:</strong> ${parsedData.side || 'N/A'}</div>
+                            <div><strong>Quantity:</strong> ${parsedData.quantity || 'N/A'}</div>
+                            <div><strong>Price:</strong> ${parsedData.price || 'N/A'}</div>
+                            <div><strong>Order ID:</strong> ${parsedData.orderId || 'N/A'}</div>
+                        </div>
+                        <pre>${JSON.stringify(parsedData, null, 2)}</pre>
+                    </div>
+                `;
+                showXMLResult('xmlParseResults', resultHTML, 'success');
+
+            } catch (error) {
+                showXMLResult('xmlParseResults', `XML parsing error: ${error.message}`, 'error');
+            }
+        }
+
+        function getXMLValue(xmlDoc, tagName) {
+            const element = xmlDoc.getElementsByTagName(tagName)[0];
+            return element ? element.textContent : null;
+        }
+
+        function loadSampleXML() {
+            const sampleXML = `<?xml version="1.0" encoding="UTF-8"?>
+<NewOrderSingle>
+    <ClOrdID>ORDER_123456</ClOrdID>
+    <Symbol>AAPL</Symbol>
+    <Side>BUY</Side>
+    <OrderQty>100</OrderQty>
+    <OrdType>LIMIT</OrdType>
+    <Price>150.50</Price>
+    <TimeInForce>DAY</TimeInForce>
+    <Account>TRADER001</Account>
+    <TransactTime>2025-01-15T10:30:00Z</TransactTime>
+</NewOrderSingle>`;
+            document.getElementById('xmlInput').value = sampleXML;
+        }
+
+        function clearXMLInput() {
+            document.getElementById('xmlInput').value = '';
+            document.getElementById('xmlParseResults').innerHTML = '';
+        }
+
+        function getRequiredFields(messageType) {
+            const fieldMap = {
+                'NewOrderSingle': ['ClOrdID', 'Symbol', 'Side', 'OrderQty', 'OrdType'],
+                'OrderCancelRequest': ['ClOrdID', 'Symbol', 'Side'],
+                'MarketDataRequest': ['MDReqID', 'SubscriptionRequestType', 'MarketDepth'],
+                'TradeReport': ['TradeReportID', 'Symbol', 'LastQty', 'LastPx'],
+                'ExecutionReport': ['OrderID', 'ExecID', 'ExecType', 'OrdStatus']
+            };
+            return fieldMap[messageType] || [];
+        }
+
+function getXMLValue(xmlDoc, tagName) {
+    const element = xmlDoc.getElementsByTagName(tagName)[0];
+    return element ? element.textContent.trim() : null;
+}
+
+function validateXML() {
+    console.log('validateXML function called');
+    const xmlInput = document.getElementById('xmlValidateInput').value;
+    const messageType = document.getElementById('messageType').value;
+            
+    console.log('XML Input:', xmlInput);
+    console.log('Message Type:', messageType);
+            
+            if (!xmlInput.trim()) {
+                showXMLResult('xmlValidateResults', 'Please enter XML content to validate', 'error');
+                return;
+            }
+
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlInput, 'text/xml');
+                
+                if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                    showXMLResult('xmlValidateResults', 'Invalid XML format - parsing errors detected', 'error');
+                    return;
+                }
+
+                const rootElement = xmlDoc.documentElement.tagName;
+                const isValidType = rootElement === messageType;
+                
+                const requiredFields = getRequiredFields(messageType);
+                const missingFields = requiredFields.filter(field => !getXMLValue(xmlDoc, field));
+                
+                if (!isValidType) {
+                    showXMLResult('xmlValidateResults', `Message type mismatch. Expected: ${messageType}, Found: ${rootElement}`, 'error');
+                    return;
+                }
+
+                if (missingFields.length > 0) {
+                    showXMLResult('xmlValidateResults', `Missing required fields: ${missingFields.join(', ')}`, 'error');
+                    return;
+                }
+
+                const resultHTML = `
+                    <div class="result success">
+                        <h4><i class="fas fa-check-circle"></i> XML Validation Successful</h4>
+                        <div class="data-rows">
+                            <div><strong>Message Type:</strong> ${messageType} ✓</div>
+                            <div><strong>Required Fields:</strong> All present ✓</div>
+                            <div><strong>XML Structure:</strong> Valid ✓</div>
+                        </div>
+                    </div>
+                `;
+                console.log('About to show validation results');
+                showXMLResult('xmlValidateResults', resultHTML, 'success');
+                console.log('Validation results should be displayed');
+
+            } catch (error) {
+                showXMLResult('xmlValidateResults', `Validation error: ${error.message}`, 'error');
+            }
+        }
+
+        function getRequiredFields(messageType) {
+            const fieldMap = {
+                'NewOrderSingle': ['ClOrdID', 'Symbol', 'Side', 'OrderQty'],
+                'OrderCancelRequest': ['OrigClOrdID', 'ClOrdID', 'Symbol'],
+                'MarketDataRequest': ['MDReqID', 'SubscriptionRequestType'],
+                'TradeReport': ['TradeReportID', 'Symbol', 'LastQty', 'LastPx'],
+                'ExecutionReport': ['OrderID', 'ExecID', 'ExecType', 'OrdStatus']
+            };
+            return fieldMap[messageType] || [];
+        }
+
+        function transformXMLToJSON() {
+            const xmlInput = document.getElementById('xmlTransformInput').value;
+            
+            if (!xmlInput.trim()) {
+                showXMLResult('xmlTransformResults', 'Please enter XML content to transform', 'error');
+                return;
+            }
+
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlInput, 'text/xml');
+                
+                if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                    showXMLResult('xmlTransformResults', 'Invalid XML format', 'error');
+                    return;
+                }
+
+                const jsonResult = xmlToJson(xmlDoc);
+                
+                const resultHTML = `
+                    <div class="result success">
+                        <h4><i class="fas fa-exchange-alt"></i> XML to JSON Transformation Complete</h4>
+                        <pre>${JSON.stringify(jsonResult, null, 2)}</pre>
+                    </div>
+                `;
+                showXMLResult('xmlTransformResults', resultHTML, 'success');
+
+            } catch (error) {
+                showXMLResult('xmlTransformResults', `Transformation error: ${error.message}`, 'error');
+            }
+        }
+
+        function xmlToJson(xml) {
+            let obj = {};
+            
+            if (xml.nodeType === 1) {
+                if (xml.attributes.length > 0) {
+                    obj["@attributes"] = {};
+                    for (let j = 0; j < xml.attributes.length; j++) {
+                        const attribute = xml.attributes.item(j);
+                        obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+                    }
+                }
+            } else if (xml.nodeType === 3) {
+                obj = xml.nodeValue;
+            }
+            
+            if (xml.hasChildNodes()) {
+                for (let i = 0; i < xml.childNodes.length; i++) {
+                    const item = xml.childNodes.item(i);
+                    const nodeName = item.nodeName;
+                    if (typeof(obj[nodeName]) === "undefined") {
+                        obj[nodeName] = xmlToJson(item);
+                    } else {
+                        if (typeof(obj[nodeName].push) === "undefined") {
+                            const old = obj[nodeName];
+                            obj[nodeName] = [];
+                            obj[nodeName].push(old);
+                        }
+                        obj[nodeName].push(xmlToJson(item));
+                    }
+                }
+            }
+            return obj;
+        }
+
+        function processBatchXML() {
+            const batchInput = document.getElementById('batchXmlInput').value;
+            
+            if (!batchInput.trim()) {
+                showXMLResult('batchProcessResults', 'Please enter XML messages to process', 'error');
+                return;
+            }
+
+            const xmlMessages = batchInput.split('\n\n').filter(msg => msg.trim());
+            const results = [];
+            
+            xmlMessages.forEach((xmlMsg, index) => {
+                try {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlMsg.trim(), 'text/xml');
+                    
+                    if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                        results.push({ index: index + 1, status: 'ERROR', message: 'Invalid XML format' });
+                        return;
+                    }
+
+                    const messageType = xmlDoc.documentElement.tagName;
+                    const symbol = getXMLValue(xmlDoc, 'Symbol') || getXMLValue(xmlDoc, 'symbol');
+                    const orderId = getXMLValue(xmlDoc, 'ClOrdID') || getXMLValue(xmlDoc, 'orderId');
+                    
+                    results.push({
+                        index: index + 1, status: 'SUCCESS', messageType, symbol, orderId
+                    });
+
+                } catch (error) {
+                    results.push({ index: index + 1, status: 'ERROR', message: error.message });
+                }
+            });
+
+            const successCount = results.filter(r => r.status === 'SUCCESS').length;
+            const errorCount = results.filter(r => r.status === 'ERROR').length;
+
+            const resultHTML = `
+                <div class="result success">
+                    <h4><i class="fas fa-layer-group"></i> Batch Processing Complete</h4>
+                    <div style="display: flex; gap: 20px; margin: 15px 0;">
+                        <span style="color: var(--success-color);">✓ Processed: ${successCount}</span>
+                        <span style="color: var(--danger-color);">✗ Errors: ${errorCount}</span>
+                        <span>📊 Total: ${results.length}</span>
+                    </div>
+                    <div>
+                        ${results.map(result => `
+                            <div style="padding: 8px; margin: 5px 0; border-left: 3px solid ${result.status === 'SUCCESS' ? 'var(--success-color)' : 'var(--danger-color)'};">
+                                <strong>Message ${result.index}:</strong> ${result.status}
+                                ${result.messageType ? `- ${result.messageType}` : ''}
+                                ${result.symbol ? `(${result.symbol})` : ''}
+                                ${result.message ? `- ${result.message}` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            showXMLResult('batchProcessResults', resultHTML, 'success');
+        }
+
+        function loadBatchSample() {
+            const batchSample = `<?xml version="1.0" encoding="UTF-8"?>
+<NewOrderSingle>
+    <ClOrdID>ORDER_001</ClOrdID>
+    <Symbol>AAPL</Symbol>
+    <Side>BUY</Side>
+    <OrderQty>100</OrderQty>
+    <Price>150.50</Price>
+</NewOrderSingle>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<OrderCancelRequest>
+    <OrigClOrdID>ORDER_001</OrigClOrdID>
+    <ClOrdID>CANCEL_001</ClOrdID>
+    <Symbol>AAPL</Symbol>
+    <Side>BUY</Side>
+</OrderCancelRequest>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<TradeReport>
+    <TradeReportID>TRADE_001</TradeReportID>
+    <Symbol>MSFT</Symbol>
+    <LastQty>50</LastQty>
+    <LastPx>300.25</LastPx>
+    <TradeDate>2025-01-15</TradeDate>
+</TradeReport>`;
+            document.getElementById('batchXmlInput').value = batchSample;
+        }
+
+        // Trade Message Functions
+        function processTradeMessage() {
+            const xmlMessage = document.getElementById('tradeXmlMessage').value;
+            if (!xmlMessage.trim()) {
+                showXMLResult('tradeMessageResults', 'Please enter XML trade message', 'error');
+                return;
+            }
+
+            console.log('Sending XML message:', xmlMessage);
+            
+            // Direct fetch call to bypass apiCall wrapper
+            fetch('http://localhost:8080/api/high-touch/trade-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: xmlMessage
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const resultHTML = `
+                        <div class="result success">
+                            <h4><i class="fas fa-check-circle"></i> Trade Message Processed</h4>
+                            <div class="data-rows">
+                                <div><strong>Status:</strong> ${data.status || 'PROCESSED'}</div>
+                                <div><strong>Order ID:</strong> ${data.orderId || 'N/A'}</div>
+                                <div><strong>Message Type:</strong> ${data.messageType || 'N/A'}</div>
+                            </div>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                    showXMLResult('tradeMessageResults', resultHTML, 'success');
+                })
+                .catch(error => {
+                    showXMLResult('tradeMessageResults', `Processing error: ${error.message}`, 'error');
+                });
+        }
+
+        function loadTradeMessageSample() {
+            const sampleMessage = `<?xml version="1.0" encoding="UTF-8"?>
+<NewOrderSingle>
+    <ClOrdID>TRADE_${Date.now()}</ClOrdID>
+    <Symbol>MSFT</Symbol>
+    <Side>SELL</Side>
+    <OrderQty>200</OrderQty>
+    <OrdType>MARKET</OrdType>
+    <Price>300.00</Price>
+    <TimeInForce>DAY</TimeInForce>
+    <Account>TRADER002</Account>
+    <TransactTime>${new Date().toISOString()}</TransactTime>
+</NewOrderSingle>`;
+            document.getElementById('tradeXmlMessage').value = sampleMessage;
+        }
+
+        function generateConfirmation() {
+            const orderId = document.getElementById('confirmationOrderId').value;
+            if (!orderId.trim()) {
+                showXMLResult('confirmationResults', 'Please enter Order ID', 'error');
+                return;
+            }
+
+            fetch(`http://localhost:8080/api/high-touch/trade-confirmation/${orderId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultHTML = `
+                        <div class="result success">
+                            <h4><i class="fas fa-file-alt"></i> Trade Confirmation Generated</h4>
+                            <pre>${data.confirmationXml || JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                    showXMLResult('confirmationResults', resultHTML, 'success');
+                })
+                .catch(error => {
+                    showXMLResult('confirmationResults', `Confirmation error: ${error.message}`, 'error');
+                });
+        }
+
+        function analyzeTradeRisk() {
+            const accountId = document.getElementById('riskAccountId').value;
+            if (!accountId.trim()) {
+                showXMLResult('riskAnalysisResults', 'Please enter Account ID', 'error');
+                return;
+            }
+
+            fetch(`http://localhost:8080/api/high-touch/risk-metrics/${accountId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultHTML = `
+                        <div class="result success">
+                            <h4><i class="fas fa-shield-alt"></i> Risk Analysis Complete</h4>
+                            <div class="data-rows">
+                                <div><strong>Account:</strong> ${accountId}</div>
+                                <div><strong>Risk Score:</strong> ${data.riskScore || 'N/A'}</div>
+                                <div><strong>Position Limit:</strong> ${data.positionLimit || 'N/A'}</div>
+                                <div><strong>Daily P&L:</strong> ${data.dailyPnL || 'N/A'}</div>
+                            </div>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                    showXMLResult('riskAnalysisResults', resultHTML, 'success');
+                })
+                .catch(error => {
+                    showXMLResult('riskAnalysisResults', `Risk analysis error: ${error.message}`, 'error');
+                });
+        }
+
+        function showXMLResult(elementId, content, type) {
+            console.log('showXMLResult called with:', elementId, type);
+            const element = document.getElementById(elementId);
+            console.log('Element found:', element);
+            if (typeof content === 'string' && !content.includes('<div class="result')) {
+                element.innerHTML = `<div class="result ${type}">${content}</div>`;
+            } else {
+                element.innerHTML = content;
+            }
+            element.style.display = 'block';
+            console.log('Element innerHTML set to:', element.innerHTML);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sample XML Trade Messages for Testing Enterprise Trading Platform -->
+
+<!-- 1. New Order Single Message -->
+<NewOrderSingle>
+    <Symbol>AAPL</Symbol>
+    <Side>BUY</Side>
+    <OrdType>LIMIT</OrdType>
+    <OrderQty>100</OrderQty>
+    <Price>150.50</Price>
+    <Account>TRADER001</Account>
+    <ClOrdID>ORDER_001_20250825</ClOrdID>
+    <TimeInForce>DAY</TimeInForce>
+    <TransactTime>2025-08-25T06:43:00Z</TransactTime>
+</NewOrderSingle>
+
+<!-- 2. Order Cancel Request Message -->
+<OrderCancelRequest>
+    <OrigClOrdID>ORDER_001_20250825</OrigClOrdID>
+    <ClOrdID>CANCEL_001_20250825</ClOrdID>
+    <Symbol>AAPL</Symbol>
+    <Side>BUY</Side>
+    <TransactTime>2025-08-25T06:45:00Z</TransactTime>
+    <Account>TRADER001</Account>
+</OrderCancelRequest>
+
+<!-- 3. Market Data Request Message -->
+<MarketDataRequest>
+    <MDReqID>MD_REQ_001</MDReqID>
+    <SubscriptionRequestType>1</SubscriptionRequestType>
+    <MarketDepth>5</MarketDepth>
+    <MDReqType>0</MDReqType>
+    <Symbol>MSFT</Symbol>
+    <MDEntryType>0</MDEntryType>
+    <MDEntryType>1</MDEntryType>
+</MarketDataRequest>
+
+<!-- 4. Trade Report Message -->
+<TradeReport>
+    <TradeID>TRADE_001_20250825</TradeID>
+    <Symbol>GOOGL</Symbol>
+    <LastQty>50</LastQty>
+    <LastPx>2750.25</LastPx>
+    <Side>SELL</Side>
+    <Account>TRADER002</Account>
+    <TradeDate>2025-08-25</TradeDate>
+    <TransactTime>2025-08-25T06:40:00Z</TransactTime>
+</TradeReport>
+
+<!-- 5. Batch Messages Example -->
+<BatchTradeMessages>
+    <TradeMessage>
+        <NewOrderSingle>
+            <Symbol>TSLA</Symbol>
+            <Side>BUY</Side>
+            <OrdType>MARKET</OrdType>
+            <OrderQty>25</OrderQty>
+            <Account>TRADER003</Account>
+            <ClOrdID>ORDER_002_20250825</ClOrdID>
+            <TimeInForce>IOC</TimeInForce>
+            <TransactTime>2025-08-25T06:43:30Z</TransactTime>
+        </NewOrderSingle>
+    </TradeMessage>
+    <TradeMessage>
+        <NewOrderSingle>
+            <Symbol>NVDA</Symbol>
+            <Side>SELL</Side>
+            <OrdType>LIMIT</OrdType>
+            <OrderQty>75</OrderQty>
+            <Price>450.75</Price>
+            <Account>TRADER004</Account>
+            <ClOrdID>ORDER_003_20250825</ClOrdID>
+            <TimeInForce>GTC</TimeInForce>
+            <TransactTime>2025-08-25T06:44:00Z</TransactTime>
+        </NewOrderSingle>
+    </TradeMessage>
+    <TradeMessage>
+        <TradeReport>
+            <TradeID>TRADE_002_20250825</TradeID>
+            <Symbol>AMZN</Symbol>
+            <LastQty>30</LastQty>
+            <LastPx>3250.50</LastPx>
+            <Side>BUY</Side>
+            <Account>TRADER005</Account>
+            <TradeDate>2025-08-25</TradeDate>
+            <TransactTime>2025-08-25T06:42:00Z</TransactTime>
+        </TradeReport>
+    </TradeMessage>
+</BatchTradeMessages>
+
+<!-- 6. Complex Order with Stop Loss -->
+<NewOrderSingle>
+    <Symbol>META</Symbol>
+    <Side>BUY</Side>
+    <OrdType>STOP_LIMIT</OrdType>
+    <OrderQty>200</OrderQty>
+    <Price>320.00</Price>
+    <StopPx>315.00</StopPx>
+    <Account>TRADER006</Account>
+    <ClOrdID>ORDER_004_20250825</ClOrdID>
+    <TimeInForce>DAY</TimeInForce>
+    <TransactTime>2025-08-25T06:45:30Z</TransactTime>
+    <ExecInst>STOP_LOSS</ExecInst>
+</NewOrderSingle>
+
+<!-- 7. IOI (Indication of Interest) Message -->
+<IOI>
+    <IOIID>IOI_001_20250825</IOIID>
+    <IOITransType>NEW</IOITransType>
+    <Symbol>JPM</Symbol>
+    <Side>BUY</Side>
+    <IOIQty>1000</IOIQty>
+    <Price>150.25</Price>
+    <ValidUntilTime>2025-08-25T16:00:00Z</ValidUntilTime>
+    <IOIQualifier>ALL_OR_NONE</IOIQualifier>
+    <Text>Large block interest for institutional client</Text>
+</IOI>
+
+<!-- 8. Risk Management Alert Message -->
+<RiskAlert>
+    <AlertID>RISK_001_20250825</AlertID>
+    <Account>TRADER001</Account>
+    <AlertType>POSITION_LIMIT</AlertType>
+    <Symbol>AAPL</Symbol>
+    <CurrentPosition>4950</CurrentPosition>
+    <PositionLimit>5000</PositionLimit>
+    <Severity>WARNING</Severity>
+    <Message>Position approaching limit for AAPL</Message>
+    <Timestamp>2025-08-25T06:46:00Z</Timestamp>
+</RiskAlert>
+
+<!-- 9. Settlement Instruction -->
+<SettlementInstruction>
+    <SettlID>SETTLE_001_20250825</SettlID>
+    <SettlInstID>SI_001</SettlInstID>
+    <SettlInstTransType>NEW</SettlInstTransType>
+    <SettlInstSource>INSTITUTION</SettlInstSource>
+    <AllocAccount>TRADER001</AllocAccount>
+    <SettlLocation>DTC</SettlLocation>
+    <SecurityType>EQUITY</SecurityType>
+    <EffectiveTime>2025-08-25T09:00:00Z</EffectiveTime>
+</SettlementInstruction>
+
+<!-- 10. Execution Report -->
+<ExecutionReport>
+    <OrderID>ORDER_001_20250825</OrderID>
+    <ExecID>EXEC_001_20250825</ExecID>
+    <ExecType>FILL</ExecType>
+    <OrdStatus>FILLED</OrdStatus>
+    <Symbol>AAPL</Symbol>
+    <Side>BUY</Side>
+    <LastQty>100</LastQty>
+    <LastPx>150.45</LastPx>
+    <LeavesQty>0</LeavesQty>
+    <CumQty>100</CumQty>
+    <AvgPx>150.45</AvgPx>
+    <Account>TRADER001</Account>
+    <TransactTime>2025-08-25T06:47:00Z</TransactTime>
+</ExecutionReport>
