@@ -1,5 +1,8 @@
-# Multi-stage build for Spring Boot application
-FROM maven:3.9-openjdk-17 AS build
+# Use OpenJDK with Maven installed
+FROM openjdk:17-jdk-slim
+
+# Install Maven
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -11,16 +14,8 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-# Runtime stage
-FROM openjdk:17-jdk-slim
-
-WORKDIR /app
-
-# Copy the built JAR
-COPY --from=build /app/target/*.jar app.jar
-
 # Expose port
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "target/mini-equities-trading-platform-1.0.0.jar"]
