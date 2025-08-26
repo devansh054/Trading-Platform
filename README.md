@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+![image alt](https://github.com/devansh054/Trading-Platform/blob/4444f58491329b2fa35c58d6ef61ef04dfb85f53/trading_platform_page-0001.jpg)
 # Mini Equities Trading Platform with IOI Support
 
 A comprehensive trading platform built with Java 17, Spring Boot, PostgreSQL, and Apache Kafka, featuring real-time order matching, risk management, and Indications of Interest (IOI) processing.
